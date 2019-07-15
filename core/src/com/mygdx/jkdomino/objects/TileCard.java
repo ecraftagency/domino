@@ -6,48 +6,51 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Align;
 import com.mygdx.jkdomino.Domino;
-import com.mygdx.jkdomino.interfaces.CardLayout;
+import com.mygdx.jkdomino.interfaces.Orientation;
 import com.mygdx.jkdomino.interfaces.Direction;
+import com.mygdx.jkdomino.interfaces.Position;
 
 public class TileCard extends Image {
     private static TextureRegion[][] textures;
-    private static float CW = 66;
-    private static float CH = 128;
+    private static float CW = 69;
+    private static float CH = 132;
 
-    private int lValue;
-    private int rValue;
+    public Orientation layout;
+    public float _width = 0;
+    public float _height = 0;
+    public int align;
+    private float shiftX = 0;
+    private float shiftY = 0;
 
-    public CardLayout layout;
-
-    public TileCard(int row, int col, float x, float y, CardLayout layout) {
+    public TileCard(int row, int col, float x, float y, Orientation layout) {
         super(textures[row][col]);
-        setPosition(x, y, Align.left);
-        lValue = row; rValue = col;
-        this.layout = layout;
-        if (layout == CardLayout.HORIZON) {
-            setRotation(-90);
+
+        setOrigin(Align.bottomLeft);
+
+        if (layout == Orientation.HORIZON) {
+            setRotation(90);
+            shiftX = CH;
         }
+
+        _width = (layout == Orientation.VERTICAL) ? CW : CH;
+        _height = (layout == Orientation.VERTICAL) ? CH : CW;
+        this.layout = layout;
+        setPosition(x + shiftX, y + 0);
     }
 
-    public float getCardWidth() {
-        return (layout == CardLayout.VERTICAL) ? TileCard.CW : TileCard.CH;
+    public float _getX() {
+        return super.getX() + -1*shiftX;
     }
 
-    public float getCardHeight() {
-        return (layout == CardLayout.VERTICAL) ? TileCard.CH : TileCard.CW;
+    public float _getWidth() {
+        return _width;
     }
 
-    public float getCardX() {
-        return (layout == CardLayout.VERTICAL) ? getX() : getX() - TileCard.CH;
-    }
-
-    public float getCardY() {
-        return 0;
-    }
-
-    public Vector2 getNextPosition(Direction d) {
-
-        return new Vector2(0,0);
+    public float _getNextHorizonPos(Position nextPosition, Orientation nextCardLayout) {
+        if (nextPosition == Position.NEXT)
+            return _getX() + _getWidth();
+        else
+            return _getX() - ((nextCardLayout == Orientation.HORIZON) ? CH : CW);
     }
 
     public static void initAssets() {

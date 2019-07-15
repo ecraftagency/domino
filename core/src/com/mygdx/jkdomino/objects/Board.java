@@ -6,9 +6,11 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.jkdomino.Domino;
 import com.mygdx.jkdomino.commons._Stage;
-import com.mygdx.jkdomino.interfaces.AddingPosition;
-import com.mygdx.jkdomino.interfaces.CardLayout;
+import com.mygdx.jkdomino.interfaces.Position;
+import com.mygdx.jkdomino.interfaces.Orientation;
 import com.mygdx.jkdomino.interfaces.IBoardEventListener;
+
+import org.omg.PortableServer.POA;
 
 import java.util.Random;
 
@@ -23,42 +25,33 @@ public class Board extends _Stage {
         this.dominos = getActors();
     }
 
-    private Vector2 getNextPosition(AddingPosition addPos, CardLayout layout) {
-        int count = getActors().size;
-        float pad, shift;
-
+    private Vector2 getNextHorizonPos(Position nextPos, Orientation layout) {
+        int count = dominos.size;
         if (count == 0)
             return new Vector2(cfg.INITIAL_X, cfg.INITIAL_Y);
-        else {
-            TileCard last = (addPos == AddingPosition.END) ? (TileCard) dominos.get(count - 1) : (TileCard) dominos.get(0);
-
-            pad = (last.layout == CardLayout.VERTICAL) ? cfg.TW : - 4;
-            pad = (layout == CardLayout.VERTICAL) ? pad : pad + 4;
-            shift = (layout == CardLayout.VERTICAL) ? 0 : cfg.TH;
-
-            if (addPos == AddingPosition.START){
-                pad = -1*pad;
-                shift = -1*shift;
-            }
-
-            return new Vector2(
-                    last.getX() + pad + shift ,
-                    cfg.INITIAL_Y
-            );
-        }
+        TileCard seed = (nextPos == Position.NEXT) ? (TileCard) dominos.get(count - 1) : (TileCard) dominos.get(0);
+        float nextX = seed._getNextHorizonPos(nextPos, layout);
+        return new Vector2(nextX, cfg.INITIAL_Y);
     }
 
-    public void addTile(AddingPosition addPos) {
-        int coin = (new Random()).nextInt(2);
-        CardLayout layout = (coin%2 == 0) ? CardLayout.HORIZON : CardLayout.VERTICAL;
-        Vector2 nextPos = getNextPosition(addPos, layout);
-        TileCard card = new TileCard(3, 4, nextPos.x, nextPos.y, layout);
+    public void addTile(Position addPos) {
+        int coin = (new Random()).nextInt(31);
+        Orientation layout = (coin%2 == 0) ? Orientation.VERTICAL : Orientation.HORIZON;
+        addPos = (coin%3 == 0) ? Position.NEXT : Position.PREVIOUS;
 
-        if (addPos == AddingPosition.END)
+        Vector2 nextPos = getNextHorizonPos(addPos, layout);
+        TileCard card = new TileCard(2,4, nextPos.x,nextPos.y, layout);
+        card.setVisible(false);
+
+        if (addPos == Position.NEXT)
             dominos.add(card);
         else
             dominos.insert(0, card);
 
+        updateViewPort(card);
+    }
+
+    private void updateViewPort(TileCard card) {
         float[] mid = getBoardWidth();
 
         float scale = mid[0] /(Domino.SW - cfg.HPADDING*2);
@@ -70,11 +63,8 @@ public class Board extends _Stage {
 
         move(new Vector2(mid[1], getCamera().position.y), 0.4f, Interpolation.fastSlow, () -> {
             listener.moveComplete();
+            card.setVisible(true);
         });
-    }
-
-    public float getBoardHeight() {
-        return 0;
     }
 
     public float[] getBoardWidth() {
@@ -84,8 +74,8 @@ public class Board extends _Stage {
 
         for (Actor a : dominos) {
             TileCard card = (TileCard)a;
-            float minx = card.getCardX();
-            float maxx = card.getCardX() + card.getCardWidth();
+            float minx = card._getX();
+            float maxx = card._getX() + card._getWidth();
             minX = (minX < minx) ? minX : minx;
             maxX = (maxX > maxx) ? maxX : maxx;
         }

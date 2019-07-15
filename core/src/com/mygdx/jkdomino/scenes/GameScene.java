@@ -7,7 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.jkdomino.Domino;
-import com.mygdx.jkdomino.interfaces.AddingPosition;
+import com.mygdx.jkdomino.interfaces.Position;
 import com.mygdx.jkdomino.interfaces.IBoardEventListener;
 import com.mygdx.jkdomino.objects.Board;
 
@@ -27,7 +27,7 @@ public class GameScene extends BaseScene implements IBoardEventListener {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 Gdx.input.setInputProcessor(null);
-                board.addTile(AddingPosition.END);
+                board.addTile(Position.PREVIOUS);
                 return super.touchDown(event, x, y, pointer, button);
             }
         });

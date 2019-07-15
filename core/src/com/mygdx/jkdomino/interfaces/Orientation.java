@@ -1,6 +1,6 @@
 package com.mygdx.jkdomino.interfaces;
 
-public enum CardLayout {
+public enum Orientation {
     VERTICAL, HORIZON
 }
 
