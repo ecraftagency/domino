@@ -1,6 +1,9 @@
 package com.mygdx.jkdomino.interfaces;
 
 public enum Orientation {
-    VERTICAL, HORIZON
+    V,
+    FV,
+    H,
+    FH
 }
 

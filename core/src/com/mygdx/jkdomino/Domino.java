@@ -7,6 +7,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mygdx.jkdomino.objects.Tile;
 import com.mygdx.jkdomino.objects.TileCard;
 import com.mygdx.jkdomino.scenes.BaseScene;
 import com.mygdx.jkdomino.scenes.GameScene;
@@ -27,6 +28,7 @@ public class Domino extends Game {
 
 	private void initAssets() {
 		TileCard.initAssets();
+		Tile.initAssets();
 	}
 
 	private void loadAssets() {
