@@ -32,6 +32,13 @@ public class Tile extends Image {
         turn = null;
     }
 
+    public int getAnotherSideValue(int value) {
+        for (int i = 0; i < 2; i++)
+            if (values[i].z != value)
+                return Math.round(values[i].z);
+        return -1;
+    }
+
     @Override
     public void rotateBy(float amountInDegrees) {
         float total = getRotation() + amountInDegrees;

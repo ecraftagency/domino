@@ -50,13 +50,19 @@ public class Tweens {
 
     public static <T extends Actor> void palActions(T target, Runnable onComplete, Action ...as) {
         ParallelAction pal = new ParallelAction();
+        SequenceAction seq = new SequenceAction();
+
         for (Action a : as) {
             pal.addAction(a);
         }
 
-        if (onComplete != null)
-            pal.addAction(Actions.run(onComplete));
-
-        target.addAction(pal);
+        if (onComplete != null) {
+            seq.addAction(pal);
+            seq.addAction(Actions.run(onComplete));
+            target.addAction(seq);
+        }
+        else {
+            target.addAction(pal);
+        }
     }
 }

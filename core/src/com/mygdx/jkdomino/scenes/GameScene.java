@@ -26,9 +26,9 @@ public class GameScene extends BaseScene implements IBoardEventListener {
         uiStage.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-            //Gdx.input.setInputProcessor(null);
-            //board.addTile(Position.PREVIOUS);
-            board.addCard();
+            Gdx.input.setInputProcessor(null);
+            if (board.addCard(2,4, 4) == -1)
+                board.addCard(2,4,2);
             return super.touchDown(event, x, y, pointer, button);
             }
         });

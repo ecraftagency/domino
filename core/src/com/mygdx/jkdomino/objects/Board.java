@@ -1,6 +1,5 @@
 package com.mygdx.jkdomino.objects;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -9,109 +8,106 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.jkdomino.Domino;
 import com.mygdx.jkdomino.commons.Tweens;
 import com.mygdx.jkdomino.commons._Stage;
-import com.mygdx.jkdomino.interfaces.Position;
-import com.mygdx.jkdomino.interfaces.Orientation;
 import com.mygdx.jkdomino.interfaces.IBoardEventListener;
 
-import java.util.Random;
-
 public class Board extends _Stage {
+    class Tuple<X, Y> {
+        X value; Y tile;
+        Tuple(X v, Y t){ value = v; tile = t;}
+    }
+
     private BoardConfig cfg;
     private IBoardEventListener listener;
     private Array<Actor> dominos;
+    private Tuple<Integer, Tile> head;
+    private Tuple<Integer, Tile> tail;
+    private float scaleFactor;
+    private Vector2 turn;
 
     public Board(IBoardEventListener listener) {
         cfg = new BoardConfig();
         this.listener = listener;
         this.dominos = getActors();
+        head = new Tuple<>(0, null);
+        tail = new Tuple<>(0, null);
+        turn = new Vector2(-1, 0);
     }
 
-    private Vector2 getNextHorizonPos(Position nextPos, Orientation layout) {
-        int count = dominos.size;
-        if (count == 0)
-            return new Vector2(cfg.INITIAL_X, cfg.INITIAL_Y);
-        TileCard seed = (nextPos == Position.NEXT) ? (TileCard) dominos.get(count - 1) : (TileCard) dominos.get(0);
-        float nextX = seed._getNextHorizonPos(nextPos, layout);
-        return new Vector2(nextX, seed._getY());
+    public int addCard(int row, int col, int value) {
+        Tile tile = new Tile(row, col);
+        if (head.tile == null && tail.tile == null) { //very first one
+            tile.rotateBy(180);
+            tile.setPosition(cfg.INITIAL_X, cfg.INITIAL_Y);
+            head.value = row;
+            head.tile = tile;
+            tail.value = col;
+            tail.tile = tile;
+            addActor(tile);
+        }
+        else {
+            int degree = 0;
+            Vector2 position;
+            if (value == head.value) {
+                degree = head.tile.evalConnectRotation(value, tile);
+                position = head.tile.evalConnectPosition(value);
+                head.value = tile.getAnotherSideValue(value);
+                head.tile = tile;
+                addActor(tile);
+            }
+            else if (value == tail.value) {
+                degree = tail.tile.evalConnectRotation(value, tile);
+                position = tail.tile.evalConnectPosition(value);
+                tail.value = tile.getAnotherSideValue(value);
+                tail.tile = tile;
+                addActor(tile);
+                //dominos.insert(0, tile);
+            }
+            else
+                return -1;
+
+            tile.rotateBy(degree);
+            tile.setPosition(position.x, position.y);
+            if (dominos.size != 0 && dominos.size %5 == 0) {
+                head.tile.turn(head.value, turn);
+                turn.x = (turn.x != 0) ? 0 : 1;
+                turn.y = (turn.y !=0) ? 0 : 1;
+            }
+        }
+
+        tile.setVisible(false);
+        updateViewPort(tile, row, col);
+        return 1;
     }
 
-    private Vector2 getNextVerticalPos(Position nextPos, Orientation layout) {
-        int count = dominos.size;
-        if (count == 0)
-            return new Vector2(cfg.INITIAL_X, cfg.INITIAL_Y);
-        TileCard seed = (nextPos == Position.NEXT) ? (TileCard) dominos.get(count - 1) : (TileCard) dominos.get(0);
-        float nextY = seed._getNextVerticalPos(nextPos, layout);
-        return new Vector2(seed._getX(), nextY);
+    private void ani(int row, int col, Vector2 pos, float rotation, float scale) {
+        Tile mimic = new Tile(row, col);
+        mimic.setPosition(0 - 0.1f*Domino.SW*scale,0 - 0.1f*Domino.SH*scale);
+        this.addActor(mimic);
+        mimic.setScale(scale);
+        Tweens.palActions(mimic, () -> {
+            dominos.removeValue(mimic, true);
+                },
+                Actions.moveTo(pos.x, pos.y, 0.4f),
+                Actions.rotateBy(rotation, 0.4f),
+                Actions.scaleTo(1, 1, 0.4f));
     }
 
-    public void addTile(Position addPos) {
-        int coin = (new Random()).nextInt(31);
-        Orientation layout = (coin%2 == 0) ? Orientation.FV : Orientation.FH;
-        addPos = (coin%3 == 0) ? Position.NEXT : Position.PREVIOUS;
-
-        Vector2 nextPos;
-        if (coin%4 == 0)
-            nextPos = getNextVerticalPos(addPos, layout);
-        else
-            nextPos = getNextHorizonPos(addPos, layout);
-
-        TileCard card = new TileCard(2,4, nextPos.x,nextPos.y, layout);
-        card.setVisible(false);
-
-        if (addPos == Position.NEXT)
-            dominos.add(card);
-        else
-            dominos.insert(0, card);
-
-        updateViewPort(card);
-    }
-
-    public void addCard() {
-        Tile card = new Tile(2,4);
-        Tile card1 = new Tile(2,5);
-        Tile card3 = new Tile(1, 5);
-
-        //card.rotateBy(180);
-        card.setPosition(300,500);
-        addActor(card);
-
-        card1.setPosition(0,0);
-        int degree = card.evalConnectRotation(2, card1);
-        Vector2 position = card.evalConnectPosition(2);
-        card1.rotateBy(degree);
-        card1.setPosition(position.x, position.y);
-        card1.turn(5, new Vector2(1, 0));
-
-        card3.setPosition(0,0);
-        degree = card1.evalConnectRotation(5, card3);
-        position = card1.evalConnectPosition(5);
-        card3.rotateBy(degree);
-        card3.setPosition(position.x, position.y);
-
-        Tile card2 = new Tile(2, 5);
-        addActor(card2);
-        card2.addAction(Actions.rotateBy(card1.getRotation(), 0.4f));
-        Tweens.action(card2, Actions.moveTo(card1.getX(), card1.getY(), 0.4f), () -> {
-            getActors().removeValue(card2, true);
-            addActor(card1);
-            addActor(card3);
-            updateViewPort(null);
-        });
-    }
-
-    private void updateViewPort(TileCard card) {
+    private void updateViewPort(Tile card, int row, int col) {
         Vector2[] mids = getMidInfo();
 
         float scaleX = mids[0].x /(Domino.SW - cfg.HPADDING*2);
         float scaleY = mids[0].y/ (Domino.SH - cfg.VPADDING*2);
         float scale = (scaleX > scaleY) ? scaleX : scaleY;
         scale = (scale >= 1) ? scale : 1;
+        this.scaleFactor = scale;
+
+        ani(row, col, new Vector2(card.getX(), card.getY()), card.getRotation(), scale);
 
         zoom(scale, 0.4f, Interpolation.fastSlow, listener::zoomComplete);
 
         move(mids[1], 0.4f, Interpolation.fastSlow, () -> {
             listener.moveComplete();
-            //card.setVisible(true);
+            card.setVisible(true);
         });
     }
 
