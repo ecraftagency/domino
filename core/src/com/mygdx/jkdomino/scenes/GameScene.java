@@ -36,8 +36,8 @@ public class GameScene extends BaseScene implements IBoardEventListener {
             Gdx.input.setInputProcessor(null);
             for (int i = 0; i < tiles.size; i++){
                 Vector2 tile = tiles.get(i);
-                if (tile.x == tile.y)
-                    continue;
+                //if (tile.x == tile.y)
+                    //continue;
                 float value = board.isConnectable(tile);
                 if (value >= 0) {
                     board.addCard((int)tile.x, (int)tile.y, (int)value);

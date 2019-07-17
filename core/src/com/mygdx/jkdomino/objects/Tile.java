@@ -22,7 +22,6 @@ public class Tile extends Image {
     private float shiftY = 0;
     private float originX = 0;
     private float originY = 0;
-    private boolean spec = false;
 
     Tile(int row, int col) {
         super(textures[row][col]);
@@ -31,17 +30,30 @@ public class Tile extends Image {
         values[0] = new Vector3(0, 1, row);
         values[1] = new Vector3(0, -1, col);
         turn = null;
-        if (row == col){
-            spec = true;
-            values[1] = values[0];
-        }
     }
 
-    public int getAnotherSideValue(int value) {
+    public Vector2[] getInitialVectors() {
+        return new Vector2[] {
+                new Vector2(values[0].x, values[0].y),
+                new Vector2(values[1].x, values[1].y)
+        };
+    }
+
+    public int getAnotherSideValue(int value) throws NullPointerException {
+        if (values[0].z == values[1].z)
+            return (int)values[0].z;
+
         for (int i = 0; i < 2; i++)
             if (values[i].z != value)
                 return Math.round(values[i].z);
-        return -1;
+        throw new NullPointerException();
+    }
+
+    public Vector2 getAnotherSideVector(Vector2 vector) throws NullPointerException {
+        for (int i = 0; i < 2; i++)
+            if (vector.x != values[i].x || vector.y != values[i].y)
+                return new Vector2(values[i].x, values[i].y);
+        throw new NullPointerException();
     }
 
     @Override
@@ -82,9 +94,6 @@ public class Tile extends Image {
             }
             _width = CW; _height = CH;
         }
-
-        if (spec)
-            values[1] = values[0];
         super.rotateBy(amountInDegrees);
     }
 
@@ -104,16 +113,22 @@ public class Tile extends Image {
         return originY;
     }
 
-    private Vector2 getDirectionVector(int value) {
-        Vector2 r = null;
+    public Vector2 getDirectionVector(int value, Vector2 vector) throws NullPointerException {
         for (int i = 0; i < 2; i++)
-            if (values[i].z == value)
-                r = new Vector2(values[i].x, values[i].y);
-        return r;
+            if (values[i].z == value && values[i].x == vector.x && values[i].y == vector.y)
+                return new Vector2(values[i].x, values[i].y);
+        throw new NullPointerException();
     }
 
-    public int evalConnectRotation(int value, Tile tile) { // chi duoc tra ve 4 gia tri: 0, 180, 90, -90
-        Vector2 connected = (turn != null && turn.z == value) ? new Vector2(turn.x, turn.y) : getDirectionVector(value);
+    public Vector2 getDirectionVector(int value) throws NullPointerException {
+        for (int i = 0; i < 2; i++)
+            if (values[i].z == value)
+                return new Vector2(values[i].x, values[i].y);
+        throw new NullPointerException();
+    }
+
+    public int evalConnectRotation(int value, Tile tile, Vector2 vector) throws NullPointerException { // chi duoc tra ve 4 gia tri: 0, 180, 90, -90
+        Vector2 connected = (turn != null && turn.z == value) ? new Vector2(turn.x, turn.y) : getDirectionVector(value, vector);
         Vector2 connector = tile.getDirectionVector(value);
 
         if ( connected.x != 0 && Math.abs(connected.x) == Math.abs(connector.x)) { //cung phuong ngang
@@ -133,8 +148,8 @@ public class Tile extends Image {
         }
     }
 
-    public Vector2 evalConnectPosition(int value) {
-        Vector2 d = this.getDirectionVector(value);
+    public Vector2 evalConnectPosition(int value, Vector2 vector) throws NullPointerException {
+        Vector2 d = this.getDirectionVector(value, vector);
         Vector2 r;
         if (turn != null){
             float padx = (turn.x > 0) ? _getWidth() : _getHeight();
@@ -144,6 +159,7 @@ public class Tile extends Image {
         }
         else
             r = new Vector2(_getX() + d.x*_getWidth(), _getY() + d.y*_getHeight());
+
         return r;
     }
 

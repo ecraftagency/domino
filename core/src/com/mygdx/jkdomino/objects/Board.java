@@ -1,7 +1,9 @@
 package com.mygdx.jkdomino.objects;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Array;
@@ -11,16 +13,16 @@ import com.mygdx.jkdomino.commons._Stage;
 import com.mygdx.jkdomino.interfaces.IBoardEventListener;
 
 public class Board extends _Stage {
-    class Tuple<X, Y> {
-        X value; Y tile;
-        Tuple(X v, Y t){ value = v; tile = t;}
+    class Tuple<X, Y, Z> {
+        X value; Y tile; Z vector;
+        Tuple(X v, Y t, Z vec){ value = v; tile = t; vector = vec;}
     }
 
     private BoardConfig cfg;
     private IBoardEventListener listener;
     private Array<Actor> dominos;
-    private Tuple<Integer, Tile> head;
-    private Tuple<Integer, Tile> tail;
+    private Tuple<Integer, Tile, Vector2> head;
+    private Tuple<Integer, Tile, Vector2> tail;
     private float scaleFactor;
     private Vector2 turn;
 
@@ -28,55 +30,70 @@ public class Board extends _Stage {
         cfg = new BoardConfig();
         this.listener = listener;
         this.dominos = getActors();
-        head = new Tuple<>(0, null);
-        tail = new Tuple<>(0, null);
+        head = new Tuple<>(0, null, null);
+        tail = new Tuple<>(0, null, null);
         turn = new Vector2(0, 1);
     }
 
-    public int addCard(int row, int col, int value) {
-        Tile tile = new Tile(row, col);
-        if (head.tile == null && tail.tile == null) { //very first one
-            tile.rotateBy(90);
-            tile.setPosition(cfg.INITIAL_X, cfg.INITIAL_Y);
-            head.value = row;
-            head.tile = tile;
-            tail.value = col;
-            tail.tile = tile;
-            addActor(tile);
-        }
-        else {
-            int degree = 0;
-            Vector2 position;
-            if (value == head.value) {
-                degree = head.tile.evalConnectRotation(value, tile);
-                position = head.tile.evalConnectPosition(value);
-                head.value = tile.getAnotherSideValue(value);
+    public void addCard(int row, int col, int value) {
+        //try {
+            Tile tile = new Tile(row, col);
+            if (head.tile == null && tail.tile == null) { //very first one
+                tile.rotateBy(90);
+                tile.setPosition(cfg.INITIAL_X, cfg.INITIAL_Y);
+                Vector2[] vecs = tile.getInitialVectors();
+                head.value = row;
                 head.tile = tile;
+                head.vector = vecs[0];
+                tail.value = col;
+                tail.tile = tile;
+                tail.vector = vecs[1];
                 addActor(tile);
             }
-            else if (value == tail.value) {
-                degree = tail.tile.evalConnectRotation(value, tile);
-                position = tail.tile.evalConnectPosition(value);
-                tail.value = tile.getAnotherSideValue(value);
-                tail.tile = tile;
-                //addActor(tile);
-                dominos.insert(0, tile);
-            }
-            else
-                return -1;
+            else {
+                int degree = 0;
+                Vector2 position;
+                if (value == head.value) {
+                    degree = head.tile.evalConnectRotation(value, tile, head.vector);
+                    position = head.tile.evalConnectPosition(value, head.vector);
 
-            tile.rotateBy(degree);
-            tile.setPosition(position.x, position.y);
-            if (dominos.size != 0 && dominos.size %5 == 0) {
-                head.tile.turn(head.value, turn);
-                turn.x = (turn.x != 0) ? 0 : 1;
-                turn.y = (turn.y !=0) ? 0 : 1;
-            }
-        }
+                    head.value = tile.getAnotherSideValue(value);
+                    head.tile = tile;
+                    addActor(tile);
+                    tile.rotateBy(degree);
+                    tile.setPosition(position.x, position.y);
+                    Vector2 dv = tile.getDirectionVector(value);
+                    head.vector = tile.getAnotherSideVector(dv);
+                }
+                else if (value == tail.value) {
+                    degree = tail.tile.evalConnectRotation(value, tile, tail.vector);
+                    position = tail.tile.evalConnectPosition(value, tail.vector);
 
-        tile.setVisible(false);
-        updateViewPort(tile, row, col);
-        return 1;
+                    tail.value = tile.getAnotherSideValue(value);
+                    tail.tile = tile;
+                    dominos.insert(0, tile);
+                    tile.rotateBy(degree);
+                    tile.setPosition(position.x, position.y);
+                    Vector2 dv = tile.getDirectionVector(value);
+                    tail.vector = tile.getAnotherSideVector(dv);
+                }
+                else
+                    return;
+
+
+                if (dominos.size != 0 && dominos.size %5 == 0) {
+                    head.tile.turn(head.value, turn);
+                    turn.x = (turn.x != 0) ? 0 : 1;
+                    turn.y = (turn.y !=0) ? 0 : 1;
+                }
+            }
+
+            tile.setVisible(false);
+            updateViewPort(tile, row, col);
+        //}
+        /*catch (Exception e) {
+            Gdx.app.log("", e.printStackTrace());
+        }*/
     }
 
     public float isConnectable(Vector2 tile) {
