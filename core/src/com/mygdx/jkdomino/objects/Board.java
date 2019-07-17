@@ -30,13 +30,13 @@ public class Board extends _Stage {
         this.dominos = getActors();
         head = new Tuple<>(0, null);
         tail = new Tuple<>(0, null);
-        turn = new Vector2(-1, 0);
+        turn = new Vector2(0, 1);
     }
 
     public int addCard(int row, int col, int value) {
         Tile tile = new Tile(row, col);
         if (head.tile == null && tail.tile == null) { //very first one
-            tile.rotateBy(180);
+            tile.rotateBy(90);
             tile.setPosition(cfg.INITIAL_X, cfg.INITIAL_Y);
             head.value = row;
             head.tile = tile;
@@ -59,8 +59,8 @@ public class Board extends _Stage {
                 position = tail.tile.evalConnectPosition(value);
                 tail.value = tile.getAnotherSideValue(value);
                 tail.tile = tile;
-                addActor(tile);
-                //dominos.insert(0, tile);
+                //addActor(tile);
+                dominos.insert(0, tile);
             }
             else
                 return -1;
@@ -77,6 +77,17 @@ public class Board extends _Stage {
         tile.setVisible(false);
         updateViewPort(tile, row, col);
         return 1;
+    }
+
+    public float isConnectable(Vector2 tile) {
+        if (head.tile == null && tail.tile == null)
+            return tile.x;
+        Vector2 current = new Vector2(head.value, tail.value);
+        if (tile.x == current.x || tile.x == current.y)
+            return tile.x;
+        if (tile.y == current.x || tile.y == current.y)
+            return tile.y;
+        return -1;
     }
 
     private void ani(int row, int col, Vector2 pos, float rotation, float scale) {

@@ -22,6 +22,7 @@ public class Tile extends Image {
     private float shiftY = 0;
     private float originX = 0;
     private float originY = 0;
+    private boolean spec = false;
 
     Tile(int row, int col) {
         super(textures[row][col]);
@@ -30,6 +31,10 @@ public class Tile extends Image {
         values[0] = new Vector3(0, 1, row);
         values[1] = new Vector3(0, -1, col);
         turn = null;
+        if (row == col){
+            spec = true;
+            values[1] = values[0];
+        }
     }
 
     public int getAnotherSideValue(int value) {
@@ -77,6 +82,9 @@ public class Tile extends Image {
             }
             _width = CW; _height = CH;
         }
+
+        if (spec)
+            values[1] = values[0];
         super.rotateBy(amountInDegrees);
     }
 
@@ -105,15 +113,7 @@ public class Tile extends Image {
     }
 
     public int evalConnectRotation(int value, Tile tile) { // chi duoc tra ve 4 gia tri: 0, 180, 90, -90
-        Vector2 connected;
-
-        if (turn != null && turn.z == value) {
-            connected = new Vector2(turn.x, turn.y);
-        }
-        else {
-             connected = this.getDirectionVector(value);
-        }
-
+        Vector2 connected = (turn != null && turn.z == value) ? new Vector2(turn.x, turn.y) : getDirectionVector(value);
         Vector2 connector = tile.getDirectionVector(value);
 
         if ( connected.x != 0 && Math.abs(connected.x) == Math.abs(connector.x)) { //cung phuong ngang
@@ -135,7 +135,7 @@ public class Tile extends Image {
 
     public Vector2 evalConnectPosition(int value) {
         Vector2 d = this.getDirectionVector(value);
-        Vector2 r = null;
+        Vector2 r;
         if (turn != null){
             float padx = (turn.x > 0) ? _getWidth() : _getHeight();
             float pady = (turn.y > 0) ? _getHeight() : _getWidth();
