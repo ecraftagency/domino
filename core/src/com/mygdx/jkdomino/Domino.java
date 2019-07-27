@@ -3,7 +3,6 @@ package com.mygdx.jkdomino;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
-import com.mygdx.jkdomino.objects.Tile;
 import com.mygdx.jkdomino.scenes.GameScene;
 
 public class Domino extends Game {
@@ -21,7 +20,7 @@ public class Domino extends Game {
 	}
 
 	private void initAssets() {
-		Tile.initAssets();
+
 	}
 
 	private void loadAssets() {

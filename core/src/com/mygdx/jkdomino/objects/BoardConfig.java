@@ -9,4 +9,5 @@ public class BoardConfig {
     public float VPADDING = 160;
     public float INITIAL_X = Domino.SW/2;
     public float INITIAL_Y = Domino.SH/2;
+    public float INITIAL_ROTATION = -90;
 }
